@@ -22,102 +22,26 @@ struct Reparacion{
 
 /*Producto es la descripcion y itpo de producto depednedel codiho, electro, mecan,...*/
 
-
-    //FUNCIONES
-void Cargar_producto(Producto*& prod){
-    ifstream archilec;
-    archilec.open("producto.bin",ios::binary);
-
-    if(!archilec){
-        cout << "No se a podido abrir el archivo" << endl;
-        return 1;
-    }
-
-    Producto p;
-    while(archilec.read(reinterpret_cast<char*>(&p), sizeof(Producto))){ // lo encontre en el material del profe
-
-    }archilec.close();
-}
-
-void Cargar_reparaciones(Reparacion*& rep){
-    ifstream archilec;
-    archilec.open("reparaciones.bin",ios::binary);
-
-    if(!archilec){
-        cout << "No se a podido abrir el archivo" << endl;
-        return 1;
-    }
-
-    Reparacion r;
-    while(archilec.read(reinterpret_cast<char*>(&r), sizeof(Reparacion))){
-
-    }archilec.close();
-}
-
-void Ordenar(){
-
-
-}
-
-void MostrarCliente(){
-
-}
-
-
-//MAIN
-main(){
-Producto* prod = new Producto;
-Reparacion* rep = new Reparacion; 
-char NomCliente[15];
-
-Cargar_producto(prod);
-Cargar_reparaciones(rep);//Lectura y cargar datos 
-
-Ordenar(); //<Reparacion>(rep, cantReparaciones, criterioReparacion); es para ordenar reparaciones
-
- cout << "Ingresar el nombre del cliente (o EOF para finalizar): ";
-cin >> NomCliente; 
-
-    //o también así: cout << "Ingresar el nombre del cliente (EOF para terminar): ";
-    //while (cin >> NomCliente) { 
-    //MostrarCliente(rep, cantReparaciones, NomCliente, prod);
-        //cout << "Ingresar el nombre del cliente (EOF para terminar): ";
-    //}
-
-while(strcmp(NomCliente, "EOF") != 0){ // lo encontre en el material del profe (comparar variables tipo char)
-
-MostrarCliente();
-}
-
-    
-
-    //Odenar 
-    //Buscar rep cliente
-    //Calcular ganacia
-    //Mostrar 
-
-return 0;}
-
-
-
-
-
-
-
-
-
-
-//esto lo pongo acá para no tosquear el código que hiciste, agregué poco
-
 // VARIABLES GLOBALES
 const int MAX_PROD = 10;
 int cantReparaciones = 0; // cantidad total de reparaciones cargadas
 
-// FUNCIONES (mantengo lo que pusiste)
+// Funciones Auxiliares
+// Convierte tipo de producto a texto
+const char* TipoToStr(int tipo) {
+    switch (tipo) {
+        case 0: return "Electrónico";
+        case 1: return "Mecánico";
+        case 2: return "Mecatrónico";
+        default: return "Desconocido";
+    }
+}
+
+// FUNCIONES DE CARGA
 void Cargar_producto(Producto*& prod) {
-    ifstream archilec("producto.bin", ios::binary);
+    ifstream archilec("productos.bin", ios::binary);
     if (!archilec) {
-        cout << "No se ha podido abrir producto.bin" << endl;
+        cout << "[!] No se ha podido abrir productos.bin" << endl;
         return;
     }
 
@@ -131,8 +55,8 @@ void Cargar_producto(Producto*& prod) {
 void Cargar_reparaciones(Reparacion*& rep) {
     ifstream archilec("reparaciones.bin", ios::binary);
     if (!archilec) {
-        cout << "No se ha podido abrir reparaciones.bin" << endl;
-        return 1;
+        cout << "[!] No se ha podido abrir reparaciones.bin" << endl;
+        return;
     }
 
     // Contar reparaciones
@@ -142,7 +66,6 @@ void Cargar_reparaciones(Reparacion*& rep) {
     }
 
     rep = new Reparacion[cantReparaciones];
-
     archilec.clear();
     archilec.seekg(0);
 
@@ -153,7 +76,7 @@ void Cargar_reparaciones(Reparacion*& rep) {
     archilec.close();
 }
 
-// Función de para ordenar ahora
+// Función de para ordenar y buscar
 void Ordenar(Reparacion* rep) {
     for (int i = 0; i < cantReparaciones - 1; i++) {
         for (int j = 0; j < cantReparaciones - 1 - i; j++) {
@@ -186,6 +109,7 @@ int BuscarProducto(Producto* prod, const char* sku) {
     return -1;
 }
 
+// Mostrar Reparaciones del Cliente
 void MostrarCliente(Reparacion* rep, Producto* prod, const char* nombre) {
     bool hayReparaciones = false;
     float totalGanancia = 0;
@@ -196,20 +120,62 @@ void MostrarCliente(Reparacion* rep, Producto* prod, const char* nombre) {
 
             int pos = BuscarProducto(prod, rep[i].SKU);
             if (pos == -1) {
-                cout << "Producto no encontrado para SKU: " << rep[i].SKU << endl;
+                cout << "[!] Producto no encontrado para SKU: " << rep[i].SKU << endl;
                 continue;
             }
 
-            //aca van los condicionales de electronico, mecanico, mecatronico
-            
-    }
+            // Mostrar datos de la reparación
+            cout << "-----------------------------" << endl;
+            cout << "Cliente: " << rep[i].Cliente << endl;
+            cout << "Tipo de producto: " << TipoToStr(rep[i].tipo) << endl;
+            cout << "SKU: " << rep[i].SKU << endl;
+            cout << "Producto: " << prod[pos].Descripcion << endl;
+            cout << "Costo fijo: " << prod[pos].CostoFijo << endl;
+            cout << "Costo directo: " << rep[i].CostoDirecto << endl;
+            cout << "Presupuestado: " << rep[i].Presu << endl;
 
+            // Calcular ganancia
+            float ganancia = rep[i].Presu - (prod[pos].CostoFijo + rep[i].CostoDirecto);
+            totalGanancia += ganancia;
+            cout << "Ganancia en esta reparación: " << ganancia << endl;
+        }
+    }
+    
     if (!hayReparaciones) {
-        cout << "No se encontraron reparaciones para el cliente: " << nombre << endl;
+        cout << "[!] No se encontraron reparaciones para el cliente: " << nombre << endl;
     } else {
-        cout << "Ganancia total: " << totalGanancia << endl;
+        cout << "[+] Ganancia total: " << totalGanancia << endl;
     }
 }
+
+//MAIN
+int main(){
+Producto* prod = nullptr;
+Reparacion* rep = nullptr; 
+char NomCliente[15];
+
+Cargar_producto(prod);
+Cargar_reparaciones(rep);//Lectura y cargar datos 
+
+Ordenar(rep); //<Reparacion>(rep, cantReparaciones, criterioReparacion); es para ordenar reparaciones
+
+// Loop de consulta
+cout << "Ingresar el nombre del cliente (EOF para terminar): ";
+cin.getline(NomCliente, 15);
+while (!cin.eof()) {
+    MostrarCliente(rep, prod, NomCliente);
+    cout << "Ingresar el nombre del cliente (EOF para terminar): ";
+    cin.getline(NomCliente, 15);
+}
+
+// Liberar memoria
+delete[] prod;
+delete[] rep;
+
+    
+return 0;
+}
+
 
 
 
